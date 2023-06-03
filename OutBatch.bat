@@ -5,10 +5,13 @@ REM フォルダのパスを指定
 set "folderPath=test"
 
 REM 出力ファイル名とパスを指定
-set "outputFile=output.txt"
+set "outputFile=output.csv"
 
 REM 出力ファイルを初期化
 type nul > "%outputFile%"
+
+REM CSVヘッダを追加
+echo "FileName","1","2" >> "%outputFile%"
 
 REM テキストファイルを処理
 for %%F in ("%folderPath%\*.txt") do (
@@ -25,14 +28,14 @@ for %%F in ("%folderPath%\*.txt") do (
             REM 抽出した数字を変数に追加
             set "match=%%L"
             if defined matches (
-                set "matches=!matches!,!match!"
+                set "matches=!matches!","!match!"
             ) else (
                 set "matches=!match!"
             )
             set /a "count+=1"
             REM 8つの数字が2つある場合に出力ファイルに追記してリセット
             if !count! equ 2 (
-                echo !fileName!: !matches! >> "%outputFile%"
+                echo "!fileName!","!matches!" >> "%outputFile%"
                 set "matches="
                 set "count=0"
             )
@@ -40,6 +43,6 @@ for %%F in ("%folderPath%\*.txt") do (
     )
     REM カンマ区切りの数字が1つだけ残っている場合に出力ファイルに追記
     if defined matches (
-        echo !fileName!: !matches! >> "%outputFile%"
+        echo "!fileName!","!matches!" >> "%outputFile%"
     )
 )
