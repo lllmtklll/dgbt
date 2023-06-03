@@ -5,34 +5,41 @@ REM フォルダのパスを指定
 set "folderPath=test"
 
 REM 出力ファイル名とパスを指定
-set "outputFile=output.csv"
+set "outputFile=output.txt"
 
-REM テキストファイルを処理してCSVファイルに出力
-echo "File Name","First Number","Second Number" > "%outputFile%"
+REM 出力ファイルを初期化
+type nul > "%outputFile%"
+
+REM テキストファイルを処理
 for %%F in ("%folderPath%\*.txt") do (
     REM ファイル名を取得
     set "fileName=%%~nxF"
 
     REM ファイルの内容を読み込んで処理
-    set "firstNumber="
-    set "secondNumber="
+    set "matches="
+    set "count=0"
     for /f "usebackq delims=" %%L in ("%%F") do (
         REM 正規表現を使用して8連続の数字を抽出
         echo %%L | findstr /r "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" > nul
         if not errorlevel 1 (
-            REM 抽出した数字を変数に格納
-            if not defined firstNumber (
-                set "firstNumber=%%L"
+            REM 抽出した数字を変数に追加
+            set "match=%%L"
+            if defined matches (
+                set "matches=!matches!,!match!"
             ) else (
-                set "secondNumber=%%L"
+                set "matches=!match!"
+            )
+            set /a "count+=1"
+            REM 8つの数字が2つある場合に出力ファイルに追記してリセット
+            if !count! equ 2 (
+                echo !fileName!: !matches! >> "%outputFile%"
+                set "matches="
+                set "count=0"
             )
         )
     )
-    REM 1つ目の数字と2つ目の数字をCSVファイルに出力
-    if defined firstNumber (
-        echo "!fileName!","!firstNumber!","!secondNumber!" >> "%outputFile%"
+    REM カンマ区切りの数字が1つだけ残っている場合に出力ファイルに追記
+    if defined matches (
+        echo !fileName!: !matches! >> "%outputFile%"
     )
 )
-
-REM CSVファイルをExcelで開く
-start excel "%outputFile%"
